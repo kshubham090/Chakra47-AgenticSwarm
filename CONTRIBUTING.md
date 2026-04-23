@@ -8,6 +8,7 @@ This document covers everything you need to know to contribute effectively.
 
 ## Table of Contents
 
+- [Step 0 — Say Hello First](#step-0--say-hello-first)
 - [Code of Conduct](#code-of-conduct)
 - [The Golden Rule](#the-golden-rule)
 - [How to Contribute](#how-to-contribute)
@@ -18,6 +19,20 @@ This document covers everything you need to know to contribute effectively.
 - [Code Standards](#code-standards)
 - [Testing Requirements](#testing-requirements)
 - [Getting Help](#getting-help)
+
+---
+
+## Step 0 — Say Hello First
+
+**Before opening an Issue or writing a single line of code — send me a message on LinkedIn.**
+
+Tell me what you're thinking of building or fixing, what gaps you've noticed in the framework, and any ideas you're bringing to the table. I respond to everyone who reaches out seriously.
+
+This isn't gatekeeping — it's to make sure your time isn't wasted building something that's already in progress, conflicts with the roadmap, or needs a design conversation before you start. A 5-minute chat upfront saves hours of rework.
+
+→ [linkedin.com/in/shubhamgupta04907](https://linkedin.com/in/shubhamgupta04907)
+
+Once we've talked, proceed to the steps below.
 
 ---
 
