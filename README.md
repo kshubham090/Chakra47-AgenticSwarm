@@ -11,6 +11,7 @@
 
 [Architecture](#architecture) · [Contributing](./CONTRIBUTING.md) · [Roadmap](#roadmap)
 
+**"The only agent framework built for environments where you have to prove what your AI did."**
 </div>
 
 ---
