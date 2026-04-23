@@ -11,6 +11,9 @@
 
 [Architecture](#architecture) · [Contributing](./CONTRIBUTING.md) · [Roadmap](#roadmap)
 
+
+<img width="945" height="473" alt="Untitled design (60)" src="https://github.com/user-attachments/assets/1dbcf040-da60-4a71-b5c5-e6771c433521" />
+
 </div>
 
 ---
