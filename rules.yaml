@@ -1,0 +1,31 @@
+# Symbolic rule engine configuration.
+# All thresholds live here — never hardcode them in agent code.
+# Rules are evaluated in ascending priority order; first match wins.
+# Supported actions: PASS, BLOCK, ESCALATE
+# Supported operators: >, <, >=, <=, ==, !=
+
+rule_engine:
+  rules:
+    - id: block_critical_risk
+      condition: "risk_score > 0.8"
+      action: BLOCK
+      priority: 1
+      reason: "Risk score exceeds critical threshold"
+
+    - id: escalate_elevated_risk
+      condition: "risk_score > 0.5"
+      action: ESCALATE
+      priority: 2
+      reason: "Risk score requires human review before proceeding"
+
+    - id: block_forbidden_action
+      condition: "action == delete"
+      action: BLOCK
+      priority: 3
+      reason: "Delete actions are forbidden without an explicit override"
+
+    - id: pass_low_risk
+      condition: "risk_score <= 0.5"
+      action: PASS
+      priority: 10
+      reason: "Risk score is within acceptable bounds"
