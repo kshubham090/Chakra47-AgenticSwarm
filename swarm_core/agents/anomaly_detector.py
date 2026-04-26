@@ -34,7 +34,9 @@ class AnomalyDetector(BaseAgent):
                 reason="Input must be a dict with a 'values' key containing a list of numbers",
             )
 
-        raw_values: list = context.input.get("values", [])
+        raw_values = context.input.get("values")
+        if raw_values is None:
+            return AgentResult.passed(agent=self.name, payload={"skipped": True})
         if len(raw_values) < 2:
             return AgentResult.exception(
                 agent=self.name,

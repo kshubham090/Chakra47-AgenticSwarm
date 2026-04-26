@@ -42,8 +42,9 @@ class OverrideHandler(BaseAgent):
         reason = str(context.input.get("reason", "")).strip()
         agent_target = str(context.input.get("agent_target", "")).strip()
 
+        # No override_key means this input is not an override request — skip silently
         if not override_key:
-            return AgentResult.blocked(agent=self.name, reason="'override_key' is required")
+            return AgentResult.passed(agent=self.name, payload={"skipped": True})
         if override_key not in self._valid_keys:
             return AgentResult.blocked(
                 agent=self.name,

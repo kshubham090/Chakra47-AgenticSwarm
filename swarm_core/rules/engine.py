@@ -120,21 +120,34 @@ class RuleEngine(BaseAgent):
         return AgentResult.passed(agent=self.name, payload={"matched_rule": rule.id})
 
     def _load_rules(self, path: Path) -> list[Rule]:
-        if not path.exists():
-            logger.warning("rules.yaml not found at %s — engine will always use LLM bridge", path)
-            return []
-        with path.open() as f:
-            data = yaml.safe_load(f)
-        raw_rules: list[dict[str, Any]] = data.get("rule_engine", {}).get("rules", [])
-        rules = [
-            Rule(
-                id=r["id"],
-                condition=r["condition"],
-                action=r["action"],
-                priority=r.get("priority", 99),
-                reason=r.get("reason", ""),
-            )
-            for r in raw_rules
-        ]
+        rules = load_rules_yaml(path)
         logger.info("rule_engine: loaded %d rules from %s", len(rules), path)
         return rules
+
+
+def load_rules_yaml(path: Path | str | None = None) -> list[Rule]:
+    """Load Rule objects from a YAML file. Used by RuleValidator and the default pipeline."""
+    p = Path(path or _DEFAULT_RULES_PATH)
+    if not p.exists():
+        return []
+    with p.open() as f:
+        data = yaml.safe_load(f) or {}
+    return [
+        Rule(
+            id=r["id"],
+            condition=r["condition"],
+            action=r["action"],
+            priority=r.get("priority", 99),
+            reason=r.get("reason", ""),
+        )
+        for r in data.get("rule_engine", {}).get("rules", [])
+    ]
+
+
+def load_config_yaml(path: Path | str | None = None) -> dict[str, Any]:
+    """Load the full rules.yaml config dict (all sections, not just rule_engine)."""
+    p = Path(path or _DEFAULT_RULES_PATH)
+    if not p.exists():
+        return {}
+    with p.open() as f:
+        return yaml.safe_load(f) or {}

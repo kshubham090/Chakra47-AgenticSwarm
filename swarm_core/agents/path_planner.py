@@ -35,6 +35,8 @@ class PathPlanner(BaseAgent):
             )
 
         waypoints = context.input.get("waypoints")
+        if waypoints is None:
+            return AgentResult.passed(agent=self.name, payload={"skipped": True})
         if not isinstance(waypoints, list):
             return AgentResult.exception(
                 agent=self.name,

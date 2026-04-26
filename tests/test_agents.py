@@ -105,8 +105,9 @@ def test_anomaly_detector_escalate_on_anomaly():
 
 
 def test_anomaly_detector_block_on_severe_anomaly():
+    # 6 identical values bound max z-score at ~2.04 (= 5√6/6); need ≥11 values for z > 3.0
     agent = AnomalyDetector(config={"z_score_threshold": 2.0, "severe_z_score_threshold": 3.0})
-    result = agent.run(AgentContext(input={"values": [10, 10, 10, 10, 10, 1000]}))
+    result = agent.run(AgentContext(input={"values": [10] * 10 + [1000]}))
     assert result.status == AgentStatus.BLOCK
 
 
@@ -114,6 +115,13 @@ def test_anomaly_detector_exception_too_few_values():
     agent = AnomalyDetector()
     result = agent.run(AgentContext(input={"values": [42]}))
     assert result.status == AgentStatus.EXCEPTION
+
+
+def test_anomaly_detector_skips_when_no_values_key():
+    agent = AnomalyDetector()
+    result = agent.run(AgentContext(input={"risk_score": 0.3}))
+    assert result.status == AgentStatus.PASS
+    assert result.payload.get("skipped") is True
 
 
 def test_anomaly_detector_pass_zero_variance():
@@ -187,9 +195,8 @@ def _make_mission_planner() -> MissionPlanner:
     mock_bridge.classify.return_value = AgentResult.exception(
         agent="mission_planner", reason="LLM fallback test"
     )
-    with patch("swarm_core.agents.mission_planner.LLMBridge", return_value=mock_bridge):
-        planner = MissionPlanner(llm_bridge=mock_bridge)
-    return planner
+    # LLMBridge is imported inside __init__; passing llm_bridge= directly overrides it
+    return MissionPlanner(llm_bridge=mock_bridge)
 
 
 def test_mission_planner_known_type_resolves_via_code():
@@ -223,6 +230,13 @@ def test_mission_planner_all_known_types_resolve_via_code():
 
 
 # ── PathPlanner ────────────────────────────────────────────────────────────────
+
+def test_path_planner_skips_when_no_waypoints_key():
+    agent = PathPlanner()
+    result = agent.run(AgentContext(input={"risk_score": 0.2}))
+    assert result.status == AgentStatus.PASS
+    assert result.payload.get("skipped") is True
+
 
 def test_path_planner_valid_two_waypoints():
     agent = PathPlanner()
@@ -307,7 +321,9 @@ def test_override_handler_missing_reason_blocked():
     assert result.status == AgentStatus.BLOCK
 
 
-def test_override_handler_missing_key_blocked():
+def test_override_handler_no_key_skips():
+    # No override_key means this is not an override request — skip, not BLOCK
     agent = OverrideHandler()
     result = agent.run(AgentContext(input={"reason": "no key provided"}))
-    assert result.status == AgentStatus.BLOCK
+    assert result.status == AgentStatus.PASS
+    assert result.payload.get("skipped") is True

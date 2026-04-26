@@ -46,7 +46,8 @@ def test_evaluate_malformed_condition_returns_false():
 
 def _make_engine(extra_rules: list[dict] | None = None) -> RuleEngine:
     """Build a RuleEngine from a temporary rules.yaml with a mocked LLM bridge."""
-    rules = extra_rules or [
+    # NOTE: must use `is not None` — `[] or defaults` would silently load default rules
+    rules = extra_rules if extra_rules is not None else [
         {"id": "block_high", "condition": "risk_score > 0.8", "action": "BLOCK", "priority": 1, "reason": "High risk"},
         {"id": "escalate_med", "condition": "risk_score > 0.5", "action": "ESCALATE", "priority": 2, "reason": "Med risk"},
         {"id": "pass_low", "condition": "risk_score <= 0.5", "action": "PASS", "priority": 10, "reason": "Low risk"},

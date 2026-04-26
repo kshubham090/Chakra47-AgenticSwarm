@@ -41,13 +41,26 @@ class CommsAgent(BaseAgent):
                 reason="Input must be a dict with 'message' and 'target' keys",
             )
 
-        message = str(context.input.get("message", "")).strip()
+        raw_message = context.input.get("message")
         target = str(context.input.get("target", "")).strip()
 
-        if not message:
-            return AgentResult.blocked(agent=self.name, reason="Empty message cannot be routed")
-        if not target:
-            return AgentResult.blocked(agent=self.name, reason="Routing target is required")
+        if raw_message is None:
+            # No explicit message — auto-build a status update from mission context
+            mission = context.metadata.get("agent_outputs", {}).get("mission_planner", {})
+            if not mission:
+                return AgentResult.passed(agent=self.name, payload={"skipped": True})
+            message = (
+                f"Swarm pipeline status: mission '{mission.get('mission_type', 'unknown')}' "
+                f"— {mission.get('step_count', 0)} steps planned"
+            )
+            target = target or "orchestrator"
+        else:
+            message = str(raw_message).strip()
+            if not message:
+                return AgentResult.blocked(agent=self.name, reason="Empty message cannot be routed")
+            if not target:
+                return AgentResult.blocked(agent=self.name, reason="Routing target is required")
+
         if target not in self._valid_targets:
             return AgentResult.blocked(
                 agent=self.name,
@@ -61,5 +74,6 @@ class CommsAgent(BaseAgent):
                 "routed_to": target,
                 "priority": priority,
                 "message_length": len(message),
+                "message": message,
             },
         )
