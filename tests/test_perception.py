@@ -130,3 +130,11 @@ def test_generated_task_id_is_uuid(ingester: Ingester):
     ctx = ingester.ingest("some input")
     import re
     assert re.match(r"[0-9a-f-]{36}", ctx.task_id)
+
+
+def test_bytes_latin1_fallback(ingester: Ingester):
+    # b'\xe9' is valid latin-1 ("é") but invalid UTF-8 → must fall back to latin-1 decode
+    raw = b"caf\xe9"
+    ctx = ingester.ingest(raw)
+    assert ctx.metadata["source_type"] == SourceType.BYTES
+    assert "caf" in ctx.input

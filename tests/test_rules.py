@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import tempfile
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -203,3 +204,24 @@ def test_llm_bridge_succeeds_on_second_attempt():
     result = bridge.classify(AgentContext(input={}), "rule_engine")
     assert result.status == AgentStatus.PASS
     assert bridge._client.chat.call_count == 2
+
+
+# ── condition evaluator edge cases ─────────────────────────────────────────────
+
+def test_evaluate_condition_type_error_returns_false():
+    # Comparing a string field to a numeric literal raises TypeError → returns False
+    assert _evaluate_condition("value > 5", {"value": "not_a_number"}) is False
+
+
+# ── load_rules_yaml / load_config_yaml missing file ───────────────────────────
+
+def test_load_rules_yaml_returns_empty_for_missing_path():
+    from swarm_core.rules.engine import load_rules_yaml
+    result = load_rules_yaml(Path("/nonexistent/path/rules.yaml"))
+    assert result == []
+
+
+def test_load_config_yaml_returns_empty_for_missing_path():
+    from swarm_core.rules.engine import load_config_yaml
+    result = load_config_yaml(Path("/nonexistent/path/rules.yaml"))
+    assert result == {}

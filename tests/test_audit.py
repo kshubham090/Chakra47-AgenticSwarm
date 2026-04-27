@@ -117,3 +117,80 @@ def test_audit_agent_never_calls_llm():
     result = agent._deterministic_logic(context)
     assert result.is_resolved
     assert result.decision_source == DecisionSource.CODE
+
+
+# ── _fetch_last_hash with existing rows ────────────────────────────────────────
+
+def test_fetch_last_hash_returns_existing_block_hash():
+    existing_hash = "b" * 64
+    chain = _make_chain(rows=[{"block_hash": existing_hash}])
+    assert chain._last_hash == existing_hash
+
+
+# ── verify_chain ───────────────────────────────────────────────────────────────
+
+def _setup_verify_response(chain: AuditChain, rows: list[dict]) -> None:
+    """Point the verify_chain query (.order().execute()) at `rows`."""
+    order_mock = chain._client.table.return_value.select.return_value.order.return_value
+    order_mock.execute.return_value.data = rows
+
+
+def test_verify_chain_empty_chain_returns_true():
+    chain = _make_chain()
+    _setup_verify_response(chain, rows=[])
+    assert chain.verify_chain() is True
+
+
+def test_verify_chain_valid_single_entry_passes():
+    import uuid
+    from datetime import datetime, timezone
+    from swarm_core.audit.chain import _hash_input
+
+    chain = _make_chain()
+    now = datetime.now(timezone.utc).isoformat()
+    entry_id = str(uuid.uuid4())
+    prev_hash = AuditChain._GENESIS_HASH
+
+    block_data = {
+        "id": entry_id,
+        "task_id": "t-verify",
+        "agent": "test_agent",
+        "status": "PASS",
+        "decision_source": "code",
+        "reason": "ok",
+        "input_hash": _hash_input("raw"),
+        "prev_hash": prev_hash,
+        "created_at": now,
+    }
+    block_hash = _sha256(block_data)
+    row = {**block_data, "block_hash": block_hash, "extra_payload": {}}
+
+    _setup_verify_response(chain, rows=[row])
+    assert chain.verify_chain() is True
+
+
+def test_verify_chain_detects_tampered_entry():
+    import uuid
+    from datetime import datetime, timezone
+    from swarm_core.audit.chain import _hash_input
+
+    chain = _make_chain()
+    now = datetime.now(timezone.utc).isoformat()
+    entry_id = str(uuid.uuid4())
+
+    block_data = {
+        "id": entry_id,
+        "task_id": "t-tamper",
+        "agent": "test_agent",
+        "status": "PASS",
+        "decision_source": "code",
+        "reason": "ok",
+        "input_hash": _hash_input("raw"),
+        "prev_hash": AuditChain._GENESIS_HASH,
+        "created_at": now,
+    }
+    # Tamper: store a wrong block_hash so the chain check fails
+    row = {**block_data, "block_hash": "0" * 64, "extra_payload": {}}
+
+    _setup_verify_response(chain, rows=[row])
+    assert chain.verify_chain() is False

@@ -327,3 +327,76 @@ def test_override_handler_no_key_skips():
     result = agent.run(AgentContext(input={"reason": "no key provided"}))
     assert result.status == AgentStatus.PASS
     assert result.payload.get("skipped") is True
+
+
+# ── non-dict input edge cases ──────────────────────────────────────────────────
+
+def test_anomaly_detector_exception_non_dict_input():
+    agent = AnomalyDetector()
+    result = agent.run(AgentContext(input="not a dict"))
+    assert result.status == AgentStatus.EXCEPTION
+
+
+def test_anomaly_detector_exception_non_numeric_values():
+    agent = AnomalyDetector()
+    result = agent.run(AgentContext(input={"values": [1, 2, "not_a_number"]}))
+    assert result.status == AgentStatus.EXCEPTION
+
+
+def test_comms_agent_exception_non_dict_input():
+    agent = CommsAgent()
+    result = agent.run(AgentContext(input="not a dict"))
+    assert result.status == AgentStatus.EXCEPTION
+
+
+def test_comms_agent_skips_when_no_message_and_no_mission():
+    agent = CommsAgent()
+    result = agent.run(AgentContext(input={}))
+    assert result.status == AgentStatus.PASS
+    assert result.payload.get("skipped") is True
+
+
+def test_mission_planner_exception_non_dict_input():
+    planner = _make_mission_planner()
+    result = planner._deterministic_logic(AgentContext(input="not a dict"))
+    assert result.status == AgentStatus.EXCEPTION
+    planner._llm_bridge.classify.assert_not_called()
+
+
+def test_override_handler_exception_non_dict_input():
+    agent = OverrideHandler()
+    result = agent.run(AgentContext(input="not a dict"))
+    assert result.status == AgentStatus.EXCEPTION
+
+
+def test_path_planner_exception_non_dict_input():
+    agent = PathPlanner()
+    result = agent.run(AgentContext(input="not a dict"))
+    assert result.status == AgentStatus.EXCEPTION
+
+
+def test_path_planner_exception_waypoints_not_list():
+    agent = PathPlanner()
+    result = agent.run(AgentContext(input={"waypoints": "not_a_list"}))
+    assert result.status == AgentStatus.EXCEPTION
+
+
+def test_path_planner_exception_invalid_waypoint_format():
+    agent = PathPlanner()
+    result = agent.run(AgentContext(input={"waypoints": [[0, 0], ["a", "b"]]}))
+    assert result.status == AgentStatus.EXCEPTION
+
+
+def test_resource_monitor_disk_error_uses_fallback():
+    agent = ResourceMonitor()
+    with patch("swarm_core.agents.resource_monitor.psutil.cpu_percent", return_value=50.0), \
+         patch("swarm_core.agents.resource_monitor.psutil.virtual_memory", return_value=MagicMock(percent=60.0)), \
+         patch("swarm_core.agents.resource_monitor.psutil.disk_usage", side_effect=PermissionError("no access")):
+        result = agent.run(AgentContext(input={}))
+    assert result.status == AgentStatus.PASS
+
+
+def test_risk_agent_exception_non_dict_input():
+    agent = RiskAgent()
+    result = agent.run(AgentContext(input="not a dict"))
+    assert result.status == AgentStatus.EXCEPTION
