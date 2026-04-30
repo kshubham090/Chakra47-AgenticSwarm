@@ -5,15 +5,14 @@ import tempfile
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-import pytest
 import yaml
 
 from swarm_core.base import AgentContext, AgentResult, AgentStatus, DecisionSource
-from swarm_core.rules.engine import RuleEngine, _evaluate_condition, _parse_literal
+from swarm_core.rules.engine import RuleEngine, _evaluate_condition
 from swarm_core.rules.llm_bridge import LLMBridge
 
-
 # ── condition evaluator ────────────────────────────────────────────────────────
+
 
 def test_evaluate_numeric_gt_true():
     assert _evaluate_condition("risk_score > 0.8", {"risk_score": 0.9}) is True
@@ -45,14 +44,37 @@ def test_evaluate_malformed_condition_returns_false():
 
 # ── rule engine helpers ────────────────────────────────────────────────────────
 
+
 def _make_engine(extra_rules: list[dict] | None = None) -> RuleEngine:
     """Build a RuleEngine from a temporary rules.yaml with a mocked LLM bridge."""
     # NOTE: must use `is not None` — `[] or defaults` would silently load default rules
-    rules = extra_rules if extra_rules is not None else [
-        {"id": "block_high", "condition": "risk_score > 0.8", "action": "BLOCK", "priority": 1, "reason": "High risk"},
-        {"id": "escalate_med", "condition": "risk_score > 0.5", "action": "ESCALATE", "priority": 2, "reason": "Med risk"},
-        {"id": "pass_low", "condition": "risk_score <= 0.5", "action": "PASS", "priority": 10, "reason": "Low risk"},
-    ]
+    rules = (
+        extra_rules
+        if extra_rules is not None
+        else [
+            {
+                "id": "block_high",
+                "condition": "risk_score > 0.8",
+                "action": "BLOCK",
+                "priority": 1,
+                "reason": "High risk",
+            },
+            {
+                "id": "escalate_med",
+                "condition": "risk_score > 0.5",
+                "action": "ESCALATE",
+                "priority": 2,
+                "reason": "Med risk",
+            },
+            {
+                "id": "pass_low",
+                "condition": "risk_score <= 0.5",
+                "action": "PASS",
+                "priority": 10,
+                "reason": "Low risk",
+            },
+        ]
+    )
     data = {"rule_engine": {"rules": rules}}
     with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
         yaml.dump(data, f)
@@ -65,6 +87,7 @@ def _make_engine(extra_rules: list[dict] | None = None) -> RuleEngine:
 
 
 # ── rule engine tests ──────────────────────────────────────────────────────────
+
 
 def test_block_rule_resolves_via_code():
     engine = _make_engine()
@@ -119,11 +142,12 @@ def test_empty_rules_file_always_falls_back_to_llm():
     engine._llm_bridge.classify.return_value = AgentResult.passed(
         agent="rule_engine", payload={"llm_reason": "ok"}
     )
-    result = engine.run(AgentContext(input={"risk_score": 0.1}))
+    engine.run(AgentContext(input={"risk_score": 0.1}))
     engine._llm_bridge.classify.assert_called_once()
 
 
 # ── LLM bridge tests ───────────────────────────────────────────────────────────
+
 
 def _make_bridge(max_retries: int = 3) -> LLMBridge:
     with patch("swarm_core.rules.llm_bridge.ollama"):
@@ -168,7 +192,9 @@ def test_llm_bridge_parses_escalate_json():
 def test_llm_bridge_handles_unstructured_keyword_response():
     bridge = _make_bridge()
     bridge._client.chat.return_value = {
-        "message": {"content": "After analysis I think this should be ESCALATE because it's unusual."}
+        "message": {
+            "content": "After analysis I think this should be ESCALATE because it's unusual."
+        }
     }
     result = bridge.classify(AgentContext(input={}), "rule_engine")
     assert result.status == AgentStatus.ESCALATE
@@ -208,6 +234,7 @@ def test_llm_bridge_succeeds_on_second_attempt():
 
 # ── condition evaluator edge cases ─────────────────────────────────────────────
 
+
 def test_evaluate_condition_type_error_returns_false():
     # Comparing a string field to a numeric literal raises TypeError → returns False
     assert _evaluate_condition("value > 5", {"value": "not_a_number"}) is False
@@ -215,13 +242,16 @@ def test_evaluate_condition_type_error_returns_false():
 
 # ── load_rules_yaml / load_config_yaml missing file ───────────────────────────
 
+
 def test_load_rules_yaml_returns_empty_for_missing_path():
     from swarm_core.rules.engine import load_rules_yaml
+
     result = load_rules_yaml(Path("/nonexistent/path/rules.yaml"))
     assert result == []
 
 
 def test_load_config_yaml_returns_empty_for_missing_path():
     from swarm_core.rules.engine import load_config_yaml
+
     result = load_config_yaml(Path("/nonexistent/path/rules.yaml"))
     assert result == {}

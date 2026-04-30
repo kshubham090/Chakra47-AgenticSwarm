@@ -6,14 +6,19 @@ from swarm_core.utils import get_logger
 logger = get_logger(__name__)
 
 _MISSION_STEPS: dict[str, list[str]] = {
-    "patrol":   ["define_route", "check_resources", "execute_patrol", "report_findings"],
-    "deliver":  ["verify_payload", "plan_path", "execute_delivery", "confirm_receipt"],
-    "inspect":  ["identify_target", "run_diagnostics", "compile_report", "notify_operator"],
-    "report":   ["collect_data", "format_report", "route_to_comms", "archive"],
-    "standby":  ["enter_idle", "monitor_alerts", "await_orders"],
-    "monitor":  ["set_observation_window", "collect_metrics", "evaluate_thresholds", "report_status"],
-    "scan":     ["define_scan_area", "execute_scan", "analyze_results", "report_findings"],
-    "alert":    ["identify_trigger", "assess_severity", "notify_stakeholders", "log_event"],
+    "patrol": ["define_route", "check_resources", "execute_patrol", "report_findings"],
+    "deliver": ["verify_payload", "plan_path", "execute_delivery", "confirm_receipt"],
+    "inspect": ["identify_target", "run_diagnostics", "compile_report", "notify_operator"],
+    "report": ["collect_data", "format_report", "route_to_comms", "archive"],
+    "standby": ["enter_idle", "monitor_alerts", "await_orders"],
+    "monitor": [
+        "set_observation_window",
+        "collect_metrics",
+        "evaluate_thresholds",
+        "report_status",
+    ],
+    "scan": ["define_scan_area", "execute_scan", "analyze_results", "report_findings"],
+    "alert": ["identify_trigger", "assess_severity", "notify_stakeholders", "log_event"],
 }
 
 
@@ -24,11 +29,18 @@ class MissionPlanner(BaseAgent):
     """
 
     name = "mission_planner"
-    description = "Converts a mission_type into an ordered step plan. LLM fallback for unknown types."
+    description = (
+        "Converts a mission_type into an ordered step plan. LLM fallback for unknown types."
+    )
 
-    def __init__(self, known_types: list[str] | None = None, llm_bridge: object | None = None) -> None:
+    def __init__(
+        self, known_types: list[str] | None = None, llm_bridge: object | None = None
+    ) -> None:
         from swarm_core.rules.llm_bridge import LLMBridge
-        self._known_types: set[str] = set(known_types) if known_types is not None else set(_MISSION_STEPS)
+
+        self._known_types: set[str] = (
+            set(known_types) if known_types is not None else set(_MISSION_STEPS)
+        )
         self._llm_bridge = llm_bridge if llm_bridge is not None else LLMBridge()
 
     def run(self, context: AgentContext) -> AgentResult:

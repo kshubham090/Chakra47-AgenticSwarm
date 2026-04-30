@@ -44,11 +44,15 @@ class ResourceMonitor(BaseAgent):
         critical = [v for v in violations if v["level"] == "critical"]
         if critical:
             summary = ", ".join(f"{v['resource']} {v['value']:.1f}%" for v in critical)
-            return AgentResult.blocked(agent=self.name, reason=f"Critical resource usage: {summary}")
+            return AgentResult.blocked(
+                agent=self.name, reason=f"Critical resource usage: {summary}"
+            )
 
         if violations:
             summary = ", ".join(f"{v['resource']} {v['value']:.1f}%" for v in violations)
-            return AgentResult.escalate(agent=self.name, reason=f"Elevated resource usage: {summary}")
+            return AgentResult.escalate(
+                agent=self.name, reason=f"Elevated resource usage: {summary}"
+            )
 
         return AgentResult.passed(agent=self.name, payload={"snapshot": snapshot})
 

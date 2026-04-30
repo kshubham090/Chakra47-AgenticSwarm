@@ -16,7 +16,9 @@ class RuleValidator(BaseAgent):
     """
 
     name = "rule_validator"
-    description = "Validates a proposed action against all symbolic rules, reporting all violations."
+    description = (
+        "Validates a proposed action against all symbolic rules, reporting all violations."
+    )
 
     def __init__(self, rules: list[Rule] | None = None) -> None:
         self._rules: list[Rule] = rules or []
@@ -32,11 +34,13 @@ class RuleValidator(BaseAgent):
             )
 
         blocks = [
-            r for r in self._rules
+            r
+            for r in self._rules
             if r.action.upper() == "BLOCK" and _evaluate_condition(r.condition, context.input)
         ]
         escalations = [
-            r for r in self._rules
+            r
+            for r in self._rules
             if r.action.upper() == "ESCALATE" and _evaluate_condition(r.condition, context.input)
         ]
 

@@ -3,13 +3,12 @@ from __future__ import annotations
 import hashlib
 import json
 import uuid
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Any
 
-from supabase import create_client, Client
-
-from swarm_core.config import SUPABASE_URL, SUPABASE_KEY
+from supabase import Client, create_client
+from swarm_core.config import SUPABASE_KEY, SUPABASE_URL
 
 _TABLE = "audit_logs"
 
@@ -44,6 +43,11 @@ class AuditChain:
     _GENESIS_HASH = "0" * 64
 
     def __init__(self) -> None:
+        if not SUPABASE_URL or not SUPABASE_KEY:
+            raise OSError(
+                "Missing required env var: SUPABASE_URL / SUPABASE_KEY."
+                " Copy .env.example → .env and fill it in, or pass --no-audit."
+            )
         self._client: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
         self._last_hash: str = self._fetch_last_hash()
 
@@ -111,12 +115,7 @@ class AuditChain:
 
     def verify_chain(self) -> bool:
         """Walks every entry in insertion order and verifies the hash chain is intact."""
-        response = (
-            self._client.table(_TABLE)
-            .select("*")
-            .order("created_at", desc=False)
-            .execute()
-        )
+        response = self._client.table(_TABLE).select("*").order("created_at", desc=False).execute()
         rows = response.data
         if not rows:
             return True

@@ -1,12 +1,11 @@
 from unittest.mock import MagicMock, patch
-import pytest
 
-from swarm_core.audit.chain import AuditChain, _sha256, _hash_input
 from swarm_core.audit.audit_agent import AuditAgent
+from swarm_core.audit.chain import AuditChain, _hash_input, _sha256
 from swarm_core.base import AgentContext, AgentResult, AgentStatus, DecisionSource
 
-
 # ── chain unit tests (Supabase mocked) ────────────────────────────────────────
+
 
 def _make_chain(rows: list[dict] | None = None) -> AuditChain:
     """Return an AuditChain with a fully mocked Supabase client."""
@@ -14,11 +13,7 @@ def _make_chain(rows: list[dict] | None = None) -> AuditChain:
     last_hash_response = MagicMock()
     last_hash_response.data = rows or []
     (
-        mock_client.table.return_value
-        .select.return_value
-        .order.return_value
-        .limit.return_value
-        .execute.return_value
+        mock_client.table.return_value.select.return_value.order.return_value.limit.return_value.execute.return_value
     ) = last_hash_response
 
     with patch("swarm_core.audit.chain.create_client", return_value=mock_client):
@@ -79,6 +74,7 @@ def test_hash_input_is_string_stable():
 
 # ── AuditAgent tests ───────────────────────────────────────────────────────────
 
+
 def _make_audit_agent() -> tuple[AuditAgent, MagicMock]:
     mock_chain = MagicMock(spec=AuditChain)
     mock_entry = MagicMock()
@@ -121,6 +117,7 @@ def test_audit_agent_never_calls_llm():
 
 # ── _fetch_last_hash with existing rows ────────────────────────────────────────
 
+
 def test_fetch_last_hash_returns_existing_block_hash():
     existing_hash = "b" * 64
     chain = _make_chain(rows=[{"block_hash": existing_hash}])
@@ -128,6 +125,7 @@ def test_fetch_last_hash_returns_existing_block_hash():
 
 
 # ── verify_chain ───────────────────────────────────────────────────────────────
+
 
 def _setup_verify_response(chain: AuditChain, rows: list[dict]) -> None:
     """Point the verify_chain query (.order().execute()) at `rows`."""
@@ -144,6 +142,7 @@ def test_verify_chain_empty_chain_returns_true():
 def test_verify_chain_valid_single_entry_passes():
     import uuid
     from datetime import datetime, timezone
+
     from swarm_core.audit.chain import _hash_input
 
     chain = _make_chain()
@@ -172,6 +171,7 @@ def test_verify_chain_valid_single_entry_passes():
 def test_verify_chain_detects_tampered_entry():
     import uuid
     from datetime import datetime, timezone
+
     from swarm_core.audit.chain import _hash_input
 
     chain = _make_chain()

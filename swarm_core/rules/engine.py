@@ -87,7 +87,10 @@ class RuleEngine(BaseAgent):
         result = self._deterministic_logic(context)
         if result.status != AgentStatus.EXCEPTION:
             return result
-        logger.info("rule_engine: no rule matched — delegating to LLM bridge")
+        logger.info(
+            "rule_engine: deterministic path unresolved (%s) — delegating to LLM bridge",
+            result.reason,
+        )
         return self._llm_bridge.classify(context, agent_name=self.name)
 
     def _deterministic_logic(self, context: AgentContext) -> AgentResult:

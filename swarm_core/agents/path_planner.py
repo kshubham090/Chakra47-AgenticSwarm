@@ -17,7 +17,9 @@ class PathPlanner(BaseAgent):
     """
 
     name = "path_planner"
-    description = "Validates waypoints and computes path distance. Deterministic for all valid inputs."
+    description = (
+        "Validates waypoints and computes path distance. Deterministic for all valid inputs."
+    )
 
     def __init__(self, config: dict[str, Any] | None = None) -> None:
         cfg = config or {}
@@ -47,8 +49,7 @@ class PathPlanner(BaseAgent):
             return AgentResult.blocked(
                 agent=self.name,
                 reason=(
-                    f"At least {self._min_waypoints} waypoints required, "
-                    f"got {len(waypoints)}"
+                    f"At least {self._min_waypoints} waypoints required, " f"got {len(waypoints)}"
                 ),
             )
         if len(waypoints) > self._max_waypoints:

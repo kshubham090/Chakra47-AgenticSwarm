@@ -5,15 +5,17 @@ from swarm_core.utils import get_logger
 
 logger = get_logger(__name__)
 
-_DEFAULT_VALID_TARGETS: frozenset[str] = frozenset({
-    "orchestrator",
-    "audit_agent",
-    "mission_planner",
-    "risk_agent",
-    "resource_monitor",
-    "anomaly_detector",
-    "human_operator",
-})
+_DEFAULT_VALID_TARGETS: frozenset[str] = frozenset(
+    {
+        "orchestrator",
+        "audit_agent",
+        "mission_planner",
+        "risk_agent",
+        "resource_monitor",
+        "anomaly_detector",
+        "human_operator",
+    }
+)
 
 
 class CommsAgent(BaseAgent):

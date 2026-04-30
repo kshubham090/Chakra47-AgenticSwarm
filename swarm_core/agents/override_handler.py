@@ -5,11 +5,13 @@ from swarm_core.utils import get_logger
 
 logger = get_logger(__name__)
 
-_DEFAULT_VALID_KEYS: frozenset[str] = frozenset({
-    "OVERRIDE_ALPHA",
-    "OVERRIDE_BETA",
-    "OVERRIDE_GAMMA",
-})
+_DEFAULT_VALID_KEYS: frozenset[str] = frozenset(
+    {
+        "OVERRIDE_ALPHA",
+        "OVERRIDE_BETA",
+        "OVERRIDE_GAMMA",
+    }
+)
 
 
 class OverrideHandler(BaseAgent):
@@ -56,7 +58,9 @@ class OverrideHandler(BaseAgent):
                 reason="Override 'reason' must be provided",
             )
 
-        logger.info("override_handler: approved override %s targeting '%s'", override_key, agent_target)
+        logger.info(
+            "override_handler: approved override %s targeting '%s'", override_key, agent_target
+        )
         return AgentResult.passed(
             agent=self.name,
             payload={

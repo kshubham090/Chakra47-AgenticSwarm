@@ -7,7 +7,7 @@ from swarm_core.utils import get_logger
 
 logger = get_logger(__name__)
 
-_FAILURE_STATUSES: frozenset[str] = frozenset({"BLOCK", "EXCEPTION"})
+_FAILURE_STATUSES: frozenset[str] = frozenset({"BLOCK"})
 
 
 class ContextAnalyst(BaseAgent):
@@ -37,7 +37,7 @@ class ContextAnalyst(BaseAgent):
                 payload={"trend": "no_history", "failure_rate": 0.0, "window": 0},
             )
 
-        recent = history[-self._window:]
+        recent = history[-self._window :]
         failure_count = sum(1 for h in recent if h.get("status") in _FAILURE_STATUSES)
         failure_rate = failure_count / len(recent)
         payload: dict[str, Any] = {

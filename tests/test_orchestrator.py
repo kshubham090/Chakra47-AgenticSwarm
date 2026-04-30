@@ -1,13 +1,11 @@
-from unittest.mock import MagicMock, call, patch
-
-import pytest
+from unittest.mock import MagicMock, patch
 
 from swarm_core.audit.chain import AuditChain
-from swarm_core.base import AgentContext, AgentResult, AgentStatus, BaseAgent, DecisionSource
+from swarm_core.base import AgentContext, AgentResult, AgentStatus, BaseAgent
 from swarm_core.orchestrator import Orchestrator, SwarmResult
 
-
 # ── helpers ───────────────────────────────────────────────────────────────────
+
 
 def _mock_chain() -> MagicMock:
     mock_chain = MagicMock(spec=AuditChain)
@@ -64,6 +62,7 @@ def _make_orchestrator(
 
 # ── SwarmResult tests ─────────────────────────────────────────────────────────
 
+
 def test_swarm_result_passed_property():
     r = SwarmResult(task_id="t1", final_status=AgentStatus.PASS)
     assert r.passed is True
@@ -77,6 +76,7 @@ def test_swarm_result_blocked_property():
 
 
 # ── rule engine gating ────────────────────────────────────────────────────────
+
 
 def test_rule_engine_block_stops_pipeline():
     stub = _StubAgent("stub", AgentResult.passed(agent="stub"))
@@ -111,6 +111,7 @@ def test_rule_engine_escalate_continues_and_flags():
 
 
 # ── agent pipeline behaviour ──────────────────────────────────────────────────
+
 
 def test_agent_block_stops_remaining_pipeline():
     blocker = _StubAgent("blocker", AgentResult.blocked(agent="blocker", reason="bad input"))
@@ -151,6 +152,7 @@ def test_multiple_escalations_all_recorded():
 
 # ── audit chain is called after every agent ───────────────────────────────────
 
+
 def test_audit_called_after_every_step():
     a1 = _StubAgent("a1", AgentResult.passed(agent="a1"))
     a2 = _StubAgent("a2", AgentResult.passed(agent="a2"))
@@ -182,6 +184,7 @@ def test_audit_called_on_rule_engine_block():
 
 
 # ── ingestion + task_id propagation ───────────────────────────────────────────
+
 
 def test_task_id_propagates_to_result():
     orch = _make_orchestrator()
@@ -225,14 +228,19 @@ def test_realistic_mission_packet_full_pipeline():
     Agents that have their data present run; others skip gracefully.
     """
     from swarm_core.orchestrator import _default_pipeline
-    from unittest.mock import patch
 
     # Suppress Ollama calls and psutil I/O in this integration test
-    with patch("swarm_core.agents.resource_monitor.psutil.cpu_percent", return_value=30.0), \
-         patch("swarm_core.agents.resource_monitor.psutil.virtual_memory",
-               return_value=MagicMock(percent=40.0)), \
-         patch("swarm_core.agents.resource_monitor.psutil.disk_usage",
-               return_value=MagicMock(percent=50.0)):
+    with (
+        patch("swarm_core.agents.resource_monitor.psutil.cpu_percent", return_value=30.0),
+        patch(
+            "swarm_core.agents.resource_monitor.psutil.virtual_memory",
+            return_value=MagicMock(percent=40.0),
+        ),
+        patch(
+            "swarm_core.agents.resource_monitor.psutil.disk_usage",
+            return_value=MagicMock(percent=50.0),
+        ),
+    ):
 
         pipeline = _default_pipeline()
         orch = Orchestrator(
@@ -240,12 +248,14 @@ def test_realistic_mission_packet_full_pipeline():
             agents=pipeline,
             rule_engine=_passing_rule_engine(),
         )
-        result = orch.run({
-            "mission_type": "patrol",
-            "waypoints": [[0, 0], [3, 4], [6, 8]],
-            "values": [10, 11, 10, 9, 10, 11],
-            "risk_score": 0.2,
-        })
+        result = orch.run(
+            {
+                "mission_type": "patrol",
+                "waypoints": [[0, 0], [3, 4], [6, 8]],
+                "values": [10, 11, 10, 9, 10, 11],
+                "risk_score": 0.2,
+            }
+        )
 
     assert result.final_status in (AgentStatus.PASS, AgentStatus.ESCALATE)
     statuses = {r.agent: r.status for r in result.agent_results}
@@ -266,9 +276,9 @@ def test_history_is_appended_per_agent():
     a1 = _StubAgent("a1", AgentResult.passed(agent="a1"))
     a2 = _StubAgent("a2", AgentResult.passed(agent="a2"))
 
-    ingester_spy = MagicMock(wraps=__import__(
-        "swarm_core.perception.ingester", fromlist=["Ingester"]
-    ).Ingester())
+    ingester_spy = MagicMock(
+        wraps=__import__("swarm_core.perception.ingester", fromlist=["Ingester"]).Ingester()
+    )
 
     orch = Orchestrator(
         audit_chain=_mock_chain(),

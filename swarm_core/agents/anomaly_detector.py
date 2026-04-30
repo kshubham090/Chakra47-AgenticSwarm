@@ -46,7 +46,9 @@ class AnomalyDetector(BaseAgent):
         try:
             values = [float(v) for v in raw_values]
         except (TypeError, ValueError) as exc:
-            return AgentResult.exception(agent=self.name, reason=f"Non-numeric value in input: {exc}")
+            return AgentResult.exception(
+                agent=self.name, reason=f"Non-numeric value in input: {exc}"
+            )
 
         mean = statistics.mean(values)
         std = statistics.stdev(values)

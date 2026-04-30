@@ -16,8 +16,8 @@ from swarm_core.agents.rule_validator import RuleValidator
 from swarm_core.base import AgentContext, AgentResult, AgentStatus, DecisionSource
 from swarm_core.rules.engine import Rule
 
-
 # ── ResourceMonitor ────────────────────────────────────────────────────────────
+
 
 def _mock_psutil(cpu: float, mem: float, disk: float):
     return {
@@ -29,9 +29,17 @@ def _mock_psutil(cpu: float, mem: float, disk: float):
 
 def _run_monitor(cpu: float, mem: float, disk: float) -> AgentResult:
     agent = ResourceMonitor()
-    with patch("swarm_core.agents.resource_monitor.psutil.cpu_percent", return_value=cpu), \
-         patch("swarm_core.agents.resource_monitor.psutil.virtual_memory", return_value=MagicMock(percent=mem)), \
-         patch("swarm_core.agents.resource_monitor.psutil.disk_usage", return_value=MagicMock(percent=disk)):
+    with (
+        patch("swarm_core.agents.resource_monitor.psutil.cpu_percent", return_value=cpu),
+        patch(
+            "swarm_core.agents.resource_monitor.psutil.virtual_memory",
+            return_value=MagicMock(percent=mem),
+        ),
+        patch(
+            "swarm_core.agents.resource_monitor.psutil.disk_usage",
+            return_value=MagicMock(percent=disk),
+        ),
+    ):
         return agent.run(AgentContext(input={}))
 
 
@@ -55,10 +63,23 @@ def test_resource_monitor_block_when_critical():
 
 # ── RuleValidator ──────────────────────────────────────────────────────────────
 
+
 def _make_rules() -> list[Rule]:
     return [
-        Rule(id="block_high", condition="risk_score > 0.8", action="BLOCK", priority=1, reason="High risk"),
-        Rule(id="escalate_med", condition="risk_score > 0.5", action="ESCALATE", priority=2, reason="Med risk"),
+        Rule(
+            id="block_high",
+            condition="risk_score > 0.8",
+            action="BLOCK",
+            priority=1,
+            reason="High risk",
+        ),
+        Rule(
+            id="escalate_med",
+            condition="risk_score > 0.5",
+            action="ESCALATE",
+            priority=2,
+            reason="Med risk",
+        ),
     ]
 
 
@@ -89,6 +110,7 @@ def test_rule_validator_exception_on_non_dict():
 
 
 # ── AnomalyDetector ────────────────────────────────────────────────────────────
+
 
 def test_anomaly_detector_pass_normal_values():
     agent = AnomalyDetector()
@@ -133,6 +155,7 @@ def test_anomaly_detector_pass_zero_variance():
 
 # ── RiskAgent ──────────────────────────────────────────────────────────────────
 
+
 def test_risk_agent_pass_low_score():
     agent = RiskAgent()
     result = agent.run(AgentContext(input={"risk_score": 0.2}))
@@ -159,6 +182,7 @@ def test_risk_agent_exception_no_numeric_signals():
 
 
 # ── ContextAnalyst ─────────────────────────────────────────────────────────────
+
 
 def test_context_analyst_pass_no_history():
     agent = ContextAnalyst()
@@ -190,6 +214,7 @@ def test_context_analyst_block_critical_failures():
 
 # ── MissionPlanner ─────────────────────────────────────────────────────────────
 
+
 def _make_mission_planner() -> MissionPlanner:
     mock_bridge = MagicMock()
     mock_bridge.classify.return_value = AgentResult.exception(
@@ -210,7 +235,7 @@ def test_mission_planner_known_type_resolves_via_code():
 
 def test_mission_planner_unknown_type_falls_to_llm():
     planner = _make_mission_planner()
-    result = planner.run(AgentContext(input={"mission_type": "self_destruct"}))
+    planner.run(AgentContext(input={"mission_type": "self_destruct"}))
     planner._llm_bridge.classify.assert_called_once()
 
 
@@ -230,6 +255,7 @@ def test_mission_planner_all_known_types_resolve_via_code():
 
 
 # ── PathPlanner ────────────────────────────────────────────────────────────────
+
 
 def test_path_planner_skips_when_no_waypoints_key():
     agent = PathPlanner()
@@ -268,6 +294,7 @@ def test_path_planner_multi_segment_distance():
 
 # ── CommsAgent ─────────────────────────────────────────────────────────────────
 
+
 def test_comms_agent_valid_message_passes():
     agent = CommsAgent()
     result = agent.run(AgentContext(input={"message": "status OK", "target": "orchestrator"}))
@@ -295,23 +322,32 @@ def test_comms_agent_missing_target_blocked():
 
 # ── OverrideHandler ────────────────────────────────────────────────────────────
 
+
 def test_override_handler_valid_key_passes():
     agent = OverrideHandler()
-    result = agent.run(AgentContext(input={
-        "override_key": "OVERRIDE_ALPHA",
-        "reason": "Maintenance window authorized by ops lead",
-        "agent_target": "risk_agent",
-    }))
+    result = agent.run(
+        AgentContext(
+            input={
+                "override_key": "OVERRIDE_ALPHA",
+                "reason": "Maintenance window authorized by ops lead",
+                "agent_target": "risk_agent",
+            }
+        )
+    )
     assert result.status == AgentStatus.PASS
     assert result.payload["approved"] is True
 
 
 def test_override_handler_invalid_key_blocked():
     agent = OverrideHandler()
-    result = agent.run(AgentContext(input={
-        "override_key": "OVERRIDE_UNKNOWN",
-        "reason": "Testing",
-    }))
+    result = agent.run(
+        AgentContext(
+            input={
+                "override_key": "OVERRIDE_UNKNOWN",
+                "reason": "Testing",
+            }
+        )
+    )
     assert result.status == AgentStatus.BLOCK
 
 
@@ -330,6 +366,7 @@ def test_override_handler_no_key_skips():
 
 
 # ── non-dict input edge cases ──────────────────────────────────────────────────
+
 
 def test_anomaly_detector_exception_non_dict_input():
     agent = AnomalyDetector()
@@ -389,9 +426,17 @@ def test_path_planner_exception_invalid_waypoint_format():
 
 def test_resource_monitor_disk_error_uses_fallback():
     agent = ResourceMonitor()
-    with patch("swarm_core.agents.resource_monitor.psutil.cpu_percent", return_value=50.0), \
-         patch("swarm_core.agents.resource_monitor.psutil.virtual_memory", return_value=MagicMock(percent=60.0)), \
-         patch("swarm_core.agents.resource_monitor.psutil.disk_usage", side_effect=PermissionError("no access")):
+    with (
+        patch("swarm_core.agents.resource_monitor.psutil.cpu_percent", return_value=50.0),
+        patch(
+            "swarm_core.agents.resource_monitor.psutil.virtual_memory",
+            return_value=MagicMock(percent=60.0),
+        ),
+        patch(
+            "swarm_core.agents.resource_monitor.psutil.disk_usage",
+            side_effect=PermissionError("no access"),
+        ),
+    ):
         result = agent.run(AgentContext(input={}))
     assert result.status == AgentStatus.PASS
 

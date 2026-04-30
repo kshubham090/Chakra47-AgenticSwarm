@@ -66,23 +66,31 @@ class LLMBridge:
                 last_error = result.reason
                 logger.warning(
                     "LLM bridge attempt %d/%d: unrecognized output — retrying. (%s)",
-                    attempt, self._max_retries, last_error,
+                    attempt,
+                    self._max_retries,
+                    last_error,
                 )
             except Exception as exc:
                 last_error = str(exc)
                 logger.warning(
                     "LLM bridge attempt %d/%d failed: %s",
-                    attempt, self._max_retries, exc,
+                    attempt,
+                    self._max_retries,
+                    exc,
                 )
 
         # All retries exhausted — ESCALATE for human review instead of stopping the pipeline
         logger.error(
             "LLM bridge exhausted %d retries; defaulting to ESCALATE. Last error: %s",
-            self._max_retries, last_error,
+            self._max_retries,
+            last_error,
         )
         return AgentResult.escalate(
             agent=agent_name,
-            reason=f"LLM bridge unavailable after {self._max_retries} attempts — escalated for human review",
+            reason=(
+                f"LLM bridge unavailable after {self._max_retries} attempts"
+                " — escalated for human review"
+            ),
             source=DecisionSource.LLM,
         )
 

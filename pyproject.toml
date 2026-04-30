@@ -36,6 +36,12 @@ target-version = "py310"
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP"]
 
+[project.scripts]
+swarm = "swarm_core.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["swarm_core", "community_agents"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "--cov=swarm_core --cov-report=term-missing --cov-fail-under=80"

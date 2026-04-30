@@ -22,7 +22,9 @@ class RiskAgent(BaseAgent):
     """
 
     name = "risk_agent"
-    description = "Computes a composite risk score from weighted numeric signals and classifies risk level."
+    description = (
+        "Computes a composite risk score from weighted numeric signals and classifies risk level."
+    )
 
     def __init__(self, config: dict[str, Any] | None = None) -> None:
         cfg = config or {}
@@ -55,12 +57,18 @@ class RiskAgent(BaseAgent):
         if score >= self._critical_threshold:
             return AgentResult.blocked(
                 agent=self.name,
-                reason=f"Composite risk score {score:.3f} exceeds critical threshold {self._critical_threshold}",
+                reason=(
+                    f"Composite risk score {score:.3f} exceeds"
+                    f" critical threshold {self._critical_threshold}"
+                ),
             )
         if score >= self._elevated_threshold:
             return AgentResult.escalate(
                 agent=self.name,
-                reason=f"Composite risk score {score:.3f} exceeds elevated threshold {self._elevated_threshold}",
+                reason=(
+                    f"Composite risk score {score:.3f} exceeds"
+                    f" elevated threshold {self._elevated_threshold}"
+                ),
             )
 
         return AgentResult.passed(

@@ -15,6 +15,7 @@ def ingester() -> Ingester:
 
 # ── dict inputs ────────────────────────────────────────────────────────────────
 
+
 def test_plain_dict_normalized(ingester: Ingester):
     ctx = ingester.ingest({"risk_score": 0.7, "action": "read"})
     assert ctx.input == {"risk_score": 0.7, "action": "read"}
@@ -46,6 +47,7 @@ def test_explicit_task_id_overrides_generated(ingester: Ingester):
 
 # ── string inputs ──────────────────────────────────────────────────────────────
 
+
 def test_json_string_parsed_to_dict(ingester: Ingester):
     ctx = ingester.ingest('{"risk_score": 0.9}')
     assert ctx.input == {"risk_score": 0.9}
@@ -72,6 +74,7 @@ def test_malformed_json_treated_as_text(ingester: Ingester):
 
 # ── bytes inputs ───────────────────────────────────────────────────────────────
 
+
 def test_bytes_decoded_and_normalized(ingester: Ingester):
     ctx = ingester.ingest(b"hello swarm")
     assert ctx.input == "hello swarm"
@@ -85,6 +88,7 @@ def test_bytes_containing_json_parsed(ingester: Ingester):
 
 
 # ── Path inputs ────────────────────────────────────────────────────────────────
+
 
 def test_path_reads_plain_text(ingester: Ingester, tmp_path: Path):
     f = tmp_path / "input.txt"
@@ -113,6 +117,7 @@ def test_path_missing_file_returns_error_context(ingester: Ingester, tmp_path: P
 
 # ── passthrough and unknown ────────────────────────────────────────────────────
 
+
 def test_agentcontext_passthrough(ingester: Ingester):
     original = AgentContext(input={"x": 1}, task_id="keep-me")
     ctx = ingester.ingest(original)
@@ -129,6 +134,7 @@ def test_unknown_type_wrapped_with_metadata(ingester: Ingester):
 def test_generated_task_id_is_uuid(ingester: Ingester):
     ctx = ingester.ingest("some input")
     import re
+
     assert re.match(r"[0-9a-f-]{36}", ctx.task_id)
 
 
