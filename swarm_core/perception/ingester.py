@@ -76,10 +76,8 @@ class Ingester:
                     return ctx
             except json.JSONDecodeError:
                 pass
-        # Wrap plain text so downstream agents always receive a dict.
-        # Agents that need specific keys (risk_score, waypoints …) will skip gracefully.
         return AgentContext(
-            input={"text": stripped},
+            input=stripped,
             task_id=task_id,
             metadata={"source_type": SourceType.TEXT},
         )
