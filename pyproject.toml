@@ -7,7 +7,7 @@ name = "chakra47-agentic-swarm"
 version = "0.1.0"
 description = "Governed, code-first multi-agent framework — Code Decides. LLM Advises."
 readme = "README.md"
-license = { file = "LICENSE" }
+license = { text = "MIT OR Apache-2.0" }
 requires-python = ">=3.10"
 dependencies = [
     "ollama>=0.3.0",
