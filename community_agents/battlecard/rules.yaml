@@ -1,0 +1,67 @@
+battlecard:
+  request_timeout: 12
+  max_pages_to_scrape: 25
+  min_reviews_for_sentiment: 5
+  min_clients_for_evidence: 3
+  user_agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+
+  pricing_keywords:
+    - pricing
+    - plans
+    - price
+    - cost
+    - buy
+    - billing
+    - subscribe
+
+  client_page_keywords:
+    - customers
+    - clients
+    - case-studies
+    - case_studies
+    - success-stories
+    - testimonials
+    - partners
+
+  career_page_keywords:
+    - careers
+    - jobs
+    - hiring
+    - join-us
+    - work-with-us
+    - open-positions
+
+  size_thresholds:
+    small: 10
+    medium: 30
+    large: 80
+
+  positive_sentiment_words:
+    - great
+    - love
+    - best
+    - amazing
+    - excellent
+    - fantastic
+    - recommend
+    - easy
+    - perfect
+    - awesome
+    - helpful
+    - reliable
+
+  negative_sentiment_words:
+    - bad
+    - terrible
+    - awful
+    - worst
+    - horrible
+    - broken
+    - expensive
+    - overpriced
+    - slow
+    - buggy
+    - frustrating
+    - disappointing
+    - scam
+    - useless
