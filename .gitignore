@@ -56,3 +56,6 @@ CLAUDE.md
 Thumbs.db
 
 .tmp/
+
+# Generated battlecard output
+battlecard_*.json
