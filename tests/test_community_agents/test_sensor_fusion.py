@@ -53,18 +53,20 @@ def test_conflict_threshold_exceeded_escalates():
     assert result.decision_source == DecisionSource.CODE
 
 
-def test_outlier_threshold_exceeded_escalates():
+def test_outlier_threshold_exceeded_blocks():
     agent = SensorFusionAgent(config={"conflict_threshold": 5.0, "outlier_threshold": 10.0})
+    # mean≈58.7, max_deviation≈16.3 > outlier_threshold=10 → rogue sensor, fused mean unreliable
     result = agent.run(_ctx({"sensors": {"a": 50.0, "b": 51.0, "c": 75.0}}))
-    assert result.status == AgentStatus.ESCALATE
-    assert "outlier" in result.reason.lower()
+    assert result.status == AgentStatus.BLOCK
+    assert result.decision_source == DecisionSource.CODE
+    assert "rogue" in result.reason.lower()
 
 
-def test_default_thresholds_escalate_on_large_deviation():
+def test_default_thresholds_block_on_large_deviation():
     agent = SensorFusionAgent()
-    # mean≈116.7, max_deviation≈33.3 > default outlier_threshold of 20
+    # mean≈116.7, max_deviation≈33.3 > default outlier_threshold=20 → BLOCK, not ESCALATE
     result = agent.run(_ctx({"sensors": {"x": 100.0, "y": 100.0, "z": 150.0}}))
-    assert result.status == AgentStatus.ESCALATE
+    assert result.status == AgentStatus.BLOCK
 
 
 # ── blocking cases ────────────────────────────────────────────────────────────

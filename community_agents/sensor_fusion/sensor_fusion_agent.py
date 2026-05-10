@@ -22,10 +22,12 @@ class SensorFusionAgent(BaseAgent):
 
     Decision table (deterministic, code path only):
 
-    - Missing required sensor         → BLOCK   (critical data absent)
-    - Max deviation > conflict_threshold → ESCALATE (sensors disagree)
-    - Any reading > outlier_threshold from mean → ESCALATE (rogue sensor)
-    - All sensors agree                → PASS   (fused mean in payload)
+    - Missing required sensor              → BLOCK    (critical data absent)
+    - Max deviation > outlier_threshold    → BLOCK    (rogue sensor; fused mean unreliable)
+    - Max deviation > conflict_threshold   → ESCALATE (plausible disagreement; needs review)
+    - All sensors agree                    → PASS     (fused mean in payload)
+
+    outlier_threshold must be strictly greater than conflict_threshold.
     """
 
     name = "sensor_fusion"
@@ -97,11 +99,12 @@ class SensorFusionAgent(BaseAgent):
         )
 
         if max_deviation > self._outlier_threshold:
-            return AgentResult.escalate(
+            return AgentResult.blocked(
                 agent=self.name,
                 reason=(
-                    f"Sensor outlier detected: '{worst_sensor}' deviates {max_deviation:.2f} "
-                    f"from mean {mean:.2f} (outlier_threshold={self._outlier_threshold})"
+                    f"Rogue sensor detected: '{worst_sensor}' deviates {max_deviation:.2f} "
+                    f"from mean {mean:.2f} (outlier_threshold={self._outlier_threshold}); "
+                    "fused mean is unreliable"
                 ),
             )
 
