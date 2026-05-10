@@ -85,3 +85,10 @@ override_handler:
     - OVERRIDE_ALPHA
     - OVERRIDE_BETA
     - OVERRIDE_GAMMA
+
+sensor_fusion:
+  # conflict_threshold: moderate disagreement — sensors differ but all are plausible → ESCALATE
+  # outlier_threshold:  extreme deviation — one sensor is rogue/broken, fused mean unreliable → BLOCK
+  # outlier_threshold must be strictly greater than conflict_threshold
+  conflict_threshold: 15.0
+  outlier_threshold: 20.0
